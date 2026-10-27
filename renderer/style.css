@@ -1,0 +1,35 @@
+/* 简洁的浅色/深色自适应样式 */
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --text: #1f2328; --muted: #6b7280; --line: #e5e7eb;
+  --primary: #2563eb; --primary-text: #ffffff; --error: #b42318; --error-bg: #fef3f2;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181d; --card: #1f2229; --text: #e6e8eb; --muted: #9aa1ac; --line: #2e323b; --primary: #3b82f6; --error: #fda29b; --error-bg: #3a1d1b; }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.page { max-width: 560px; margin: 0 auto; padding: 40px 24px; }
+.hero h1 { margin: 0; font-size: 26px; font-weight: 600; }
+.meta { margin: 6px 0 28px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.tag { font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); }
+.tag.update { color: var(--primary); border-color: var(--primary); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.card h2 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+.status { margin: 0 0 12px; }
+.notes { margin: 0 0 12px; color: var(--muted); white-space: pre-wrap; }
+.progress { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; margin: 0 0 12px; }
+.bar { height: 100%; width: 0; background: var(--primary); transition: width .2s; }
+.error { margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; color: var(--error); background: var(--error-bg); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  font: inherit; padding: 6px 16px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--text);
+}
+.btn:hover { border-color: var(--primary); }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-text); }
+.btn:disabled { opacity: .5; cursor: default; }
+[hidden] { display: none !important; }

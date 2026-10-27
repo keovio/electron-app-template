@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>应用</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <h1 id="app-name">&nbsp;</h1>
+      <p class="meta">
+        <span id="app-version">&nbsp;</span>
+        <span id="app-source" class="tag" hidden></span>
+      </p>
+    </header>
+
+    <!-- 在这里放你的业务界面 -->
+
+    <section class="card" id="update-card">
+      <div class="card-head">
+        <h2>应用更新</h2>
+      </div>
+      <p class="status" id="update-status">点击「检查更新」看看有没有新版本</p>
+      <p class="notes" id="update-notes" hidden></p>
+      <div class="progress" id="update-progress" hidden>
+        <div class="bar" id="update-bar"></div>
+      </div>
+      <p class="error" id="update-error" hidden></p>
+      <div class="actions">
+        <button id="btn-check" class="btn">检查更新</button>
+        <button id="btn-download" class="btn primary" hidden>下载更新</button>
+        <button id="btn-full" class="btn primary" hidden>下载完整安装包</button>
+        <button id="btn-restart" class="btn primary" hidden>重启生效</button>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

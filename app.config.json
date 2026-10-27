@@ -1,0 +1,9 @@
+{
+  "appName": "my-electron-app",
+  "productName": "示例应用",
+  "appId": "com.example.myelectronapp",
+  "repo": "keovio/electron-app-template",
+  "tagPrefix": "v",
+  "channelTag": "latest-layer",
+  "mirrors": ["", "https://ghfast.top/"]
+}
