@@ -1,0 +1,19 @@
+{
+  "version": "0.3.1",
+  "electron": "33.4.11",
+  "bootstrap": 1,
+  "sha256": "61e83e15930d772f8dad36c07afce6e5075f34d816fb7f56f8a44f67c6c86032",
+  "size": 173685,
+  "asarUrl": "https://github.com/keovio/electron-app-template/releases/download/v0.3.1/app-update.asar",
+  "installers": {
+    "mac": {
+      "arm64": "https://github.com/keovio/electron-app-template/releases/download/v0.1.0/my-electron-app-0.1.0-mac-arm64.dmg",
+      "x64": "https://github.com/keovio/electron-app-template/releases/download/v0.1.0/my-electron-app-0.1.0-mac-x64.dmg"
+    },
+    "win": "https://github.com/keovio/electron-app-template/releases/download/v0.1.0/my-electron-app-0.1.0-win-x64.exe",
+    "linux": "https://github.com/keovio/electron-app-template/releases/download/v0.1.0/my-electron-app-0.1.0-linux-x64.AppImage"
+  },
+  "releaseUrl": "https://github.com/keovio/electron-app-template/releases/tag/v0.3.1",
+  "notes": "布局可切换：卡片（多列）或经典（单列列表）；卡片随窗口宽度自动铺满；设置分组合并更清爽",
+  "publishedAt": "2026-10-28T06:51:32.982Z"
+}
