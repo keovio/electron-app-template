@@ -62,3 +62,17 @@ test("onChange 只在真正变化时触发；reset 恢复默认；扩展 schema"
   s.set({ theme: "dark" });
   assert.equal(seen.length, 4);
 });
+
+test("外观设置：背景、遮罩步进、字体、日志面板宽度", () => {
+  const s = createSettings({ file: path.join(tmp(), "a.json") });
+  assert.equal(s.get("background"), "aurora");
+  assert.equal(s.get("glass"), true);
+  const r = s.set({ background: "night", backgroundDim: 0.3, fontFamily: "custom", fontCustom: "LXGW WenKai", fontSize: 30, logDockWidth: 100, logFontSize: 13.4 });
+  assert.equal(r.ok, true);
+  assert.equal(s.get("backgroundDim"), 0.3); // 没有浮点误差
+  assert.equal(s.get("fontSize"), 18);
+  assert.equal(s.get("logDockWidth"), 280);
+  assert.equal(s.get("logFontSize"), 13);
+  assert.equal(s.set({ background: "rainbow" }).ok, false);
+  assert.equal(s.set({ accent: "violet" }).ok, true);
+});

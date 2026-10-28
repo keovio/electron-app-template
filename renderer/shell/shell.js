@@ -52,11 +52,35 @@
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     star: '<path d="M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.4 6.5 20.3l1-6.2L3 9.7l6.2-.9z"/>',
     chevron: '<path d="M15 6l-6 6 6 6"/>',
+    terminal: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/>',
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    minus: '<path d="M5 12h14"/>',
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+    trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+    arrowDown: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+    palette: '<path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-7.8-9-7.8z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/>',
   };
   function icon(name) {
     if (ICONS[name]) return h("span", { class: "ico", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>` });
     return h("span", { class: "ico ico-text" }, String(name || "•").slice(0, 2));
   }
+
+  // ---------- 模块卡片 ----------
+  // 页面用模块拼：Shell.modules(Shell.card({ title: "标题", tag: "已开启", actions: [按钮] }, 内容…), …)
+  // modules() 是瀑布流容器（宽窗口自动多列），card() 是一个模块
+  function card(opts, ...children) {
+    const o = typeof opts === "string" ? { title: opts } : (opts || {});
+    const head = o.title || o.actions ? h("header", { class: "card-head" },
+      h("h2", {}, o.icon ? icon(o.icon) : null, o.title || ""),
+      o.tag ? h("span", { class: "card-tag" }, o.tag) : null,
+      h("span", { class: "spacer" }),
+      o.actions || null) : null;
+    return h("section", { class: "card module" + (o.class ? " " + o.class : ""), id: o.id }, head,
+      o.desc ? h("p", { class: "card-desc" }, o.desc) : null, ...children);
+  }
+  function modules(...children) { return h("div", { class: "modules" }, ...children); }
 
   // ---------- 状态 ----------
   const pages = new Map(); // id → { def, section, root, rendered }
@@ -152,6 +176,8 @@
     if (!started) return;
     if ("theme" in patch) applyTheme();
     if ("sidebarCollapsed" in patch || "sidebarWidth" in patch) applySidebar();
+    if (APPEARANCE_KEYS.some((k) => k in patch)) applyAppearance();
+    for (const cb of settingListeners) { try { cb(patch, settings); } catch (err) { reportError(err); } }
   }
 
   const settingListeners = new Set();
@@ -166,6 +192,44 @@
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }
   mq.addEventListener("change", applyTheme);
+
+  // ---------- 外观：主题色、背景、毛玻璃、性能模式、字体 ----------
+  const APPEARANCE_KEYS = ["accent", "background", "backgroundDim", "glass", "performanceMode", "fontFamily", "fontCustom", "fontSize"];
+  const FONT_STACKS = {
+    system: '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif',
+    sans: '"Inter", "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", system-ui, sans-serif',
+    serif: '"Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", "STSong", "SimSun", Georgia, serif',
+    rounded: 'ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Yuanti SC", "YouYuan", "Varela Round", sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, "Sarasa Mono SC", "Noto Sans Mono CJK SC", monospace',
+  };
+  // 自定义字体名只留安全字符，防止写坏样式
+  const cleanFontName = (v) => String(v || "").replace(/[^\p{L}\p{N} _\-,'"]/gu, "").trim().slice(0, 200);
+  let bgImageLoaded = false;
+  async function loadBackgroundImage(force) {
+    if (bgImageLoaded && !force) return;
+    bgImageLoaded = true;
+    let url = "";
+    try { url = await api.appearance.background(); } catch { /* ignore */ }
+    const el = $("#bg");
+    el.style.backgroundImage = url ? `url("${url}")` : "";
+    el.classList.toggle("has-image", !!url);
+  }
+  function applyAppearance() {
+    const root = document.documentElement;
+    const s = settings;
+    root.dataset.accent = s.accent || "blue";
+    const bg = s.background || "none";
+    root.dataset.bg = bg;
+    const perf = !!s.performanceMode;
+    root.classList.toggle("perf", perf);
+    root.classList.toggle("glass", bg !== "none" && !!s.glass && !perf);
+    root.classList.toggle("has-bg", bg !== "none");
+    $("#bg-dim").style.opacity = String(s.backgroundDim || 0);
+    if (bg === "custom") loadBackgroundImage(false);
+    const fam = s.fontFamily === "custom" ? (cleanFontName(s.fontCustom) ? cleanFontName(s.fontCustom) + ", " + FONT_STACKS.system : FONT_STACKS.system) : (FONT_STACKS[s.fontFamily] || FONT_STACKS.system);
+    root.style.setProperty("--font", fam);
+    root.style.setProperty("--font-size", (s.fontSize || 14) + "px");
+  }
 
   // ---------- 侧边栏：折叠 + 拖动宽度 ----------
   const MIN_W = 180, MAX_W = 360, SNAP_W = 120;
@@ -266,8 +330,10 @@
     ctx.info = info;
     ctx.productName = info.productName;
     applyTheme();
+    applyAppearance();
     applySidebar();
     setupResizer();
+    api.appearance.onBackground(() => loadBackgroundImage(true));
     $("#app-name").textContent = info.productName;
     $("#brand-mark").textContent = (info.productName || "A").trim().slice(0, 1).toUpperCase();
     $("#app-version").textContent = "v" + info.version;
@@ -282,6 +348,7 @@
       settings = { ...all, ...pendingPatch };
       if ("theme" in changed) applyTheme();
       if ("sidebarCollapsed" in changed || "sidebarWidth" in changed) applySidebar();
+      if (APPEARANCE_KEYS.some((k) => k in changed)) applyAppearance();
       for (const cb of settingListeners) { try { cb(changed, settings); } catch (err) { reportError(err); } }
     });
 
@@ -296,7 +363,7 @@
   window.Shell = {
     registerPage, navigate, prerender, onStart, setBadge, toast, confirm: confirmDialog,
     saveSettings, onSettings, getSettings: () => ({ ...settings }), toggleSidebar,
-    h, $, icon, fmtTime, fmtDuration, debounce, reportError, start,
+    h, $, icon, card, modules, fmtTime, fmtDuration, debounce, reportError, start,
     get current() { return current; }, ctx,
   };
 })();

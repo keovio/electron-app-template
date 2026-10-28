@@ -212,6 +212,13 @@ function runSmokeTest() {
         await new Promise((r) => setTimeout(r, 50));
       }
       const logs = await a.logs.list({});
+      // 右侧运行日志面板能打开，外观设置能生效
+      window.Shell.toggleLogDock(true);
+      window.Shell.saveSettings({ background: "night", fontSize: 15 });
+      await new Promise((r) => setTimeout(r, 300));
+      const dock = !document.getElementById("logdock").hidden && !!document.querySelector("#logdock .log-list");
+      const look = document.documentElement.dataset.bg === "night" && getComputedStyle(document.body).fontSize === "15px";
+      window.Shell.toggleLogDock(false);
       return {
         api: typeof a === "object" && typeof a.update.check === "function" && typeof a.settings.set === "function",
         nodeHidden: typeof require === "undefined" && typeof process === "undefined",
@@ -221,14 +228,14 @@ function runSmokeTest() {
         navs, settingsVisible,
         theme: document.documentElement.dataset.theme || "",
         task: task && task.status,
-        logCount: logs.length,
+        logCount: logs.length, dock, look,
         info, source: upd.source,
       };
     })()`, true), TIMEOUT_MS, "页面脚本");
     const result = { ...out, layerVersion: LAYER_VERSION, boot: { source: BOOT.source, version: BOOT.version, bundled: BOOT.bundledVersion, electron: BOOT.electron }, platform: process.platform, rendererErrors: errors };
     const ok = out.api && out.nodeHidden && out.card && out.name === config.productName && out.version.includes(LAYER_VERSION)
       && ["home", "tasks", "logs", "settings"].every((p) => out.navs.includes(p)) && out.settingsVisible
-      && /^(light|dark)$/.test(out.theme) && out.task === "done" && out.logCount > 0 && !errors.length;
+      && /^(light|dark)$/.test(out.theme) && out.task === "done" && out.logCount > 0 && out.dock && out.look && !errors.length;
     console.log((ok ? "SMOKE OK " : "SMOKE FAIL ") + JSON.stringify(result));
     clearTimeout(hardStop);
     BOOT.markGood();

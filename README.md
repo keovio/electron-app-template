@@ -20,8 +20,13 @@
 打开就是一个完整的桌面应用框架：
 
 - **左侧导航**：拖动右边缘调宽度（180–360px），拖到最左或双击边缘 / 点底部箭头 / `Ctrl/⌘ + B` 折叠成图标栏；宽度和折叠状态会记住。
-- **深浅色**：跟随系统 / 浅色 / 深色，同时作用于原生菜单和滚动条（`nativeTheme`）。
-- **设置页**：外观（主题、界面缩放、侧边栏）、通用（开机自启、自动检查更新）、应用更新、数据与日志（打开数据目录、日志级别、清除缓存、恢复默认）、关于。设置存在 `<数据目录>/settings.json`，有默认值和校验。
+- **深浅色 + 主题色**：跟随系统 / 浅色 / 深色（同时作用于原生菜单和滚动条），7 种主题色。
+- **可换背景**：极光、晚霞、海洋、森林、薄雾、夜空、纯色，或选一张自己的图片（存进数据目录）；可调背景遮罩，卡片和侧边栏默认毛玻璃。
+- **性能模式**：一键关掉毛玻璃模糊、阴影和动画，老电脑上更流畅、更省电。
+- **可换字体**：系统默认 / 现代无衬线 / 宋体 / 圆体 / 等宽，或填任意已安装字体；字号 12–18px 单独可调。
+- **模块化卡片布局**：页面用 `Shell.modules()` + `Shell.card()` 拼，宽窗口自动排成多列（瀑布流），设置页就是这样拼的。
+- **右侧运行日志面板**：`Ctrl/⌘ + L` 或侧边栏底部按钮开关，拖左边缘调宽度（双击收起），`A− / A+` 或 `Ctrl/⌘ + 滚轮` 缩放字号；收起时有新错误按钮会亮红点。
+- **设置页**：外观、背景、字体、运行日志、通用（开机自启、自动检查更新）、关于与更新、数据与日志（打开数据目录、日志级别、清除缓存、恢复默认）、系统信息。设置存在 `<数据目录>/settings.json`，有默认值和校验，修改立即生效。
 - **日志页**：主进程和页面的日志实时显示，可按级别 / 关键字筛选、暂停滚动、复制、打开日志文件夹；同时按天写文件、保留 7 天。有新错误时导航上会出现角标。
 - **后台任务**：主进程注册任务，页面一行启动；进度条（未知进度显示滚动条）、可取消、排队（默认同时 2 个）；侧边栏底部常驻进度指示，完成/失败弹提示。
 
@@ -33,7 +38,14 @@
 ```js
 Shell.registerPage({
   id: "notes", title: "笔记", icon: "note", order: 20,   // icon：home note folder search chart user star…，或一个字
-  render(root, ctx) { root.append(Shell.h("h1", {}, "笔记")); },  // 第一次打开时调用
+  render(root, ctx) {                                    // 第一次打开时调用
+    const { h, card, modules } = Shell;
+    root.classList.add("page-wide");                     // 宽页面，模块排多列
+    root.append(h("header", { class: "page-head" }, h("h1", {}, "笔记")),
+      modules(
+        card({ title: "最近", icon: "note", tag: "3 条", actions: [h("button", { class: "btn small" }, "新建")] }, h("p", {}, "…")),
+        card({ title: "统计", desc: "一句说明" }, h("p", {}, "…"))));
+  },
   onShow(root, ctx) {},                                  // 每次切进来（可选）
 });
 ```
@@ -67,7 +79,7 @@ tasks.register("export", {
 
 ```js
 Shell.registerSettingsSection({ id: "export", title: "导出", order: 25, render(box) {
-  const { row, toggle, select, segmented } = Shell.settingsUI;
+  const { row, toggle, select, segmented, range, swatches } = Shell.settingsUI;   // 每个分组是一张卡片
   box.append(row("导出目录", Shell.getSettings().exportDir || "未设置", Shell.h("button", { class: "btn" }, "选择…")));
 } });
 ```
