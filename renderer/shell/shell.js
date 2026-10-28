@@ -70,6 +70,7 @@
   // ---------- 模块卡片 ----------
   // 页面用模块拼：Shell.modules(Shell.card({ title: "标题", tag: "已开启", actions: [按钮] }, 内容…), …)
   // modules() 是瀑布流容器（宽窗口自动多列），card() 是一个模块
+  // 设置里切到「经典」布局时，同样的 modules/card 会排成单列列表，页面代码不用改
   function card(opts, ...children) {
     const o = typeof opts === "string" ? { title: opts } : (opts || {});
     const head = o.title || o.actions ? h("header", { class: "card-head" },
@@ -80,7 +81,47 @@
     return h("section", { class: "card module" + (o.class ? " " + o.class : ""), id: o.id }, head,
       o.desc ? h("p", { class: "card-desc" }, o.desc) : null, ...children);
   }
-  function modules(...children) { return h("div", { class: "modules" }, ...children); }
+  // 瀑布流：CSS grid + 每张卡按实际高度占 N 行（保持 DOM 顺序），列数按容器宽度算，
+  // 卡片少于可放列数时卡片会变宽铺满，不会右边空一大块。窗口/日志面板/侧边栏变宽变窄都会实时重排。
+  const MODULE_MIN_W = 320, MODULE_GAP = 18;
+  const moduleObserver = typeof ResizeObserver === "function" ? new ResizeObserver((entries) => {
+    const boxes = new Set();
+    for (const e of entries) boxes.add(e.target.classList.contains("modules") ? e.target : e.target.parentElement);
+    for (const b of boxes) if (b) layoutModules(b);
+  }) : null;
+  function layoutModules(box) {
+    if (!box.isConnected) return;
+    const items = [...box.children].filter((c) => !c.hidden);
+    if (document.documentElement.dataset.layout === "classic") {
+      box.style.gridTemplateColumns = "";
+      for (const c of items) c.style.gridRowEnd = "";
+      return;
+    }
+    const w = box.clientWidth;
+    if (!w) return;
+    const fit = Math.max(1, Math.floor((w + MODULE_GAP) / (MODULE_MIN_W + MODULE_GAP)));
+    const cols = Math.max(1, Math.min(fit, items.length || 1));
+    box.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+    for (const c of items) {
+      c.style.gridRowEnd = "auto";
+      const hgt = c.getBoundingClientRect().height;
+      c.style.gridRowEnd = `span ${Math.max(1, Math.ceil(hgt + MODULE_GAP))}`;
+    }
+  }
+  function modules(...children) {
+    const box = h("div", { class: "modules" }, ...children);
+    if (moduleObserver) {
+      moduleObserver.observe(box);
+      for (const c of box.children) moduleObserver.observe(c);
+      // 后加进来的卡片也要观察
+      new MutationObserver((muts) => {
+        for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1) moduleObserver.observe(n);
+        layoutModules(box);
+      }).observe(box, { childList: true });
+    }
+    return box;
+  }
+  function relayoutModules() { for (const b of document.querySelectorAll(".modules")) layoutModules(b); }
 
   // ---------- 状态 ----------
   const pages = new Map(); // id → { def, section, root, rendered }
@@ -194,7 +235,7 @@
   mq.addEventListener("change", applyTheme);
 
   // ---------- 外观：主题色、背景、毛玻璃、性能模式、字体 ----------
-  const APPEARANCE_KEYS = ["accent", "background", "backgroundDim", "glass", "performanceMode", "fontFamily", "fontCustom", "fontSize"];
+  const APPEARANCE_KEYS = ["layout", "accent", "background", "backgroundDim", "glass", "performanceMode", "fontFamily", "fontCustom", "fontSize"];
   const FONT_STACKS = {
     system: '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif',
     sans: '"Inter", "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", system-ui, sans-serif',
@@ -217,6 +258,7 @@
   function applyAppearance() {
     const root = document.documentElement;
     const s = settings;
+    root.dataset.layout = s.layout === "classic" ? "classic" : "cards";
     root.dataset.accent = s.accent || "blue";
     const bg = s.background || "none";
     root.dataset.bg = bg;
@@ -229,6 +271,7 @@
     const fam = s.fontFamily === "custom" ? (cleanFontName(s.fontCustom) ? cleanFontName(s.fontCustom) + ", " + FONT_STACKS.system : FONT_STACKS.system) : (FONT_STACKS[s.fontFamily] || FONT_STACKS.system);
     root.style.setProperty("--font", fam);
     root.style.setProperty("--font-size", (s.fontSize || 14) + "px");
+    requestAnimationFrame(relayoutModules);
   }
 
   // ---------- 侧边栏：折叠 + 拖动宽度 ----------

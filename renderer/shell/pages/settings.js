@@ -1,6 +1,6 @@
 "use strict";
 // 内置页面：设置。每个分组是一张模块卡片，宽窗口自动排成多列（瀑布流）。
-// 外观（深浅色、主题色、缩放、侧边栏）、背景（预设 / 自定义图片、遮罩、毛玻璃、性能模式）、字体、运行日志、通用、应用更新、数据与日志、关于。
+// 外观（布局、深浅色、主题色、缩放）、背景（预设 / 自定义图片、遮罩、毛玻璃、性能模式）、字体、关于与更新（含系统信息）、日志与数据。
 // 加自己的设置分组（一张卡片）：
 //   Shell.registerSettingsSection({ id: "sync", title: "同步", order: 15, tag: "可选", render(box, ctx) { box.append(row(...)) } });
 // 设置项要先在 main.js 的 schema 里声明，读写用 Shell.getSettings() / Shell.saveSettings({ key: value })。
@@ -186,13 +186,15 @@
     return swatches("background", BACKGROUNDS.map(([v, l]) => [v, l, "bg-" + v]), { cls: "bg-swatch", extra: upload });
   }
 
+  const sub = (text) => h("div", { class: "set-sub" }, text);
+
   const builtin = [
     { id: "appearance", title: "外观", icon: "palette", order: 10, render(box) {
       box.append(
+        row("布局", "卡片：宽窗口自动排成多列；经典：单列列表", segmented("layout", [["cards", "卡片"], ["classic", "经典"]])),
         row("主题", "跟随系统会随系统的深浅色自动切换", segmented("theme", [["system", "跟随系统"], ["light", "浅色"], ["dark", "深色"]])),
         row("主题色", "按钮、选中项和进度条的颜色", swatches("accent", ACCENTS.map(([v, l]) => [v, l, "accent-" + v]))),
-        row("界面缩放", "调整所有文字和控件的大小", select("zoom", [[0.8, "80%"], [0.9, "90%"], [1, "100%"], [1.1, "110%"], [1.25, "125%"], [1.5, "150%"]], { parse: Number })),
-        row("折叠侧边栏", "只显示图标。也可以按 Ctrl/⌘ + B，或双击侧边栏边缘", toggle("sidebarCollapsed")));
+        row("界面缩放", "调整所有文字和控件的大小", select("zoom", [[0.8, "80%"], [0.9, "90%"], [1, "100%"], [1.1, "110%"], [1.25, "125%"], [1.5, "150%"]], { parse: Number })));
     } },
     { id: "background", title: "背景", icon: "image", order: 12, tag: (s) => (s.performanceMode ? "性能模式" : ""), render(box) {
       const clearBtn = h("button", { class: "btn small ghost", onclick: async () => { await api.appearance.clearBackground(); window.Shell.toast("已移除自定义背景", "success"); } }, "移除自定义图片");
@@ -221,31 +223,35 @@
         row("字号", "正文文字大小（界面缩放会再整体放大）", range("fontSize", { min: 12, max: 18, step: 1, format: (v) => v + " px" })),
         h("div", { class: "font-preview" }, h("div", { class: "fp-big" }, "敏捷的棕色狐狸 The quick brown fox"), h("div", { class: "muted small" }, "0123456789 · 预览当前字体和字号")));
     } },
-    { id: "logdock", title: "运行日志", icon: "terminal", order: 16, render(box) {
-      box.append(
-        row("右侧运行日志面板", "随时查看实时日志。拖动面板左边缘调宽度，Ctrl/⌘ + L 开关", toggle("logDockOpen")),
-        row("日志字号", "也可以在日志上按住 Ctrl/⌘ 滚动滚轮", range("logFontSize", { min: 10, max: 18, step: 1, format: (v) => v + " px" })));
-    } },
-    { id: "general", title: "通用", order: 20, render(box, ctx) {
-      if (ctx.system.canOpenAtLogin) box.append(row("开机自动启动", "登录系统后自动打开应用", toggle("openAtLogin")));
-      box.append(row("自动检查更新", "启动后在后台检查，有新版本自动下载，重启生效", toggle("autoCheckUpdate")));
-    } },
-    { id: "update", title: "关于与更新", order: 30, render(box, ctx) {
-      const i = ctx.info;
+    { id: "update", title: "关于与更新", icon: "arrowDown", order: 30, render(box, ctx) {
+      const i = ctx.info, sy = ctx.system;
       const stat = (k, v) => h("div", { class: "stat" }, h("div", { class: "muted small" }, k), h("div", { class: "stat-v" }, v));
-      box.append(
+      const kv = (k, v) => h("div", { class: "kv" }, h("span", { class: "muted" }, k), h("span", { class: "mono" }, v));
+      box.append(...[
         h("div", { class: "stats" },
           stat("当前版本", "v" + i.version),
           stat("来源", i.source === "update" ? `增量（安装包 v${i.bundledVersion}）` : "安装包"),
-          stat("内核", "Electron " + ctx.system.versions.electron)),
-        h("p", { class: "muted small" }, "只下载界面与功能部分（通常几百 KB 到几 MB），Electron 内核不变就不用重装；新版本启动失败会自动退回。"),
-        updateCard(i));
+          stat("内核", "Electron " + sy.versions.electron)),
+        updateCard(i),
+        row("自动检查更新", "启动后在后台检查，有新版本自动下载，重启生效；新版本启动失败会自动退回", toggle("autoCheckUpdate")),
+        sy.canOpenAtLogin ? row("开机自动启动", "登录系统后自动打开应用", toggle("openAtLogin")) : null,
+        h("details", { class: "set-details" }, h("summary", {}, "系统信息"),
+          h("div", { class: "kv-list" },
+            kv("应用", i.productName),
+            kv("版本", `${i.version}（${i.source === "update" ? `已更新，安装包 ${i.bundledVersion}` : "安装包内置"}）`),
+            kv("Electron", sy.versions.electron), kv("Chromium", sy.versions.chrome), kv("Node.js", sy.versions.node),
+            kv("系统", `${sy.platform}-${sy.arch}`),
+            i.repoConfigured ? kv("仓库", i.repo) : null)),
+      ].filter(Boolean));
     } },
-    { id: "data", title: "数据与日志", order: 40, render(box, ctx) {
+    { id: "data", title: "日志与数据", icon: "terminal", order: 40, render(box, ctx) {
       box.append(
-        row("数据目录", ctx.system.dataDir, h("button", { class: "btn", onclick: () => api.system.openDataDir() }, "打开")),
+        sub("日志"),
         row("日志级别", "「调试」会记录更多细节，排查问题时再打开", select("logLevel", [["debug", "调试"], ["info", "信息"], ["warn", "警告"], ["error", "错误"]])),
+        row("日志面板字号", "右侧运行日志面板（Ctrl/⌘ + L）的文字大小，也可以在面板上按住 Ctrl/⌘ 滚动滚轮", range("logFontSize", { min: 10, max: 18, step: 1, format: (v) => v + " px" })),
         row("日志文件", "按天保存，保留 7 天", h("button", { class: "btn", onclick: () => api.logs.openDir() }, "打开文件夹")),
+        sub("数据"),
+        row("数据目录", ctx.system.dataDir, h("button", { class: "btn", onclick: () => api.system.openDataDir() }, "打开")),
         row("清除缓存", "清掉网页缓存，不影响设置和数据", h("button", { class: "btn", onclick: async () => {
           const r = await api.system.clearCache();
           window.Shell.toast(r.ok ? "缓存已清除" : "清除失败：" + r.error, r.ok ? "success" : "error");
@@ -255,16 +261,6 @@
           await api.settings.reset();
           window.Shell.toast("已恢复默认设置", "success");
         } }, "恢复默认")));
-    } },
-    { id: "about", title: "系统信息", order: 90, render(box, ctx) {
-      const i = ctx.info, s = ctx.system;
-      const kv = (k, v) => h("div", { class: "kv" }, h("span", { class: "muted" }, k), h("span", { class: "mono" }, v));
-      box.append(h("div", { class: "kv-list" },
-        kv("应用", i.productName),
-        kv("版本", `${i.version}（${i.source === "update" ? `已更新，安装包 ${i.bundledVersion}` : "安装包内置"}）`),
-        kv("Electron", s.versions.electron), kv("Chromium", s.versions.chrome), kv("Node.js", s.versions.node),
-        kv("系统", `${s.platform}-${s.arch}`),
-        i.repoConfigured ? kv("仓库", i.repo) : null));
     } },
   ];
 
@@ -286,6 +282,7 @@
         body.append(h("section", { class: "card module set-group", id: `settings-${sec.id}` },
           h("header", { class: "card-head" }, h("h2", {}, sec.icon ? icon(sec.icon) : null, sec.title), tagEl), box));
         try { await sec.render(box, c); } catch (err) { window.Shell.reportError(err); box.append(h("p", { class: "error" }, err.message)); }
+        if (!box.childElementCount) document.getElementById(`settings-${sec.id}`)?.remove();
       }
     },
   });
