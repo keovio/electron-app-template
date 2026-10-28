@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "electron": "33.4.11",
+  "bootstrap": 1,
+  "sha256": "7f8f0a4004a1ed83c9900f5c1a3b6e3e7181d544c0be6a4f1d157aa6d3c2df7b",
+  "size": 131352,
+  "asarUrl": "https://github.com/keovio/electron-app-template/releases/download/v0.2.0/app-update.asar",
+  "installers": {
+    "mac": {
+      "arm64": "https://github.com/keovio/electron-app-template/releases/download/v0.1.0/my-electron-app-0.1.0-mac-arm64.dmg",
+      "x64": "https://github.com/keovio/electron-app-template/releases/download/v0.1.0/my-electron-app-0.1.0-mac-x64.dmg"
+    },
+    "win": "https://github.com/keovio/electron-app-template/releases/download/v0.1.0/my-electron-app-0.1.0-win-x64.exe",
+    "linux": "https://github.com/keovio/electron-app-template/releases/download/v0.1.0/my-electron-app-0.1.0-linux-x64.AppImage"
+  },
+  "releaseUrl": "https://github.com/keovio/electron-app-template/releases/tag/v0.2.0",
+  "notes": "新增通用外壳：可折叠、可拖动宽度的侧边导航，设置页，深浅色主题，日志页，带进度的后台任务",
+  "publishedAt": "2026-10-28T06:19:10.003Z"
+}
