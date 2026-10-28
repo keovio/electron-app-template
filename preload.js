@@ -46,6 +46,13 @@ contextBridge.exposeInMainWorld("app", {
     clearFinished: () => ipcRenderer.invoke("tasks:clearFinished"),
     onChange: on("tasks:changed"),
   },
+  // 外观：自定义背景图（选择 / 读取 data URL / 清除）；onBackground(() => …) 背景图变了
+  appearance: {
+    pickBackground: () => ipcRenderer.invoke("appearance:pickBackground"),
+    background: () => ipcRenderer.invoke("appearance:background"),
+    clearBackground: () => ipcRenderer.invoke("appearance:clearBackground"),
+    onBackground: on("appearance:background"),
+  },
   system: {
     info: () => ipcRenderer.invoke("system:info"),
     openDataDir: () => ipcRenderer.invoke("system:openDataDir"),
