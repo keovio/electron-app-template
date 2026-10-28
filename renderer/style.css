@@ -362,3 +362,5 @@ select.input { padding-right: 6px; }
 .segmented button { white-space: nowrap; }
 .set-row .swatches { gap: 6px; flex-wrap: nowrap; }
 .set-row .swatch { width: 20px; height: 20px; }
+.set-row.stack .swatches { flex-wrap: wrap; gap: 8px; }
+.bg-swatch { flex: none; }
