@@ -36,7 +36,12 @@ const args = ["--smoke-test", "--no-updates"];
 if (process.platform === "linux") args.push("--no-sandbox");
 console.log(`运行：${exe} ${args.join(" ")}`);
 // 测试用独立的更新目录，避免碰到本机真实数据
-const env = { ...process.env, APP_UPDATES_DIR: path.join(require("os").tmpdir(), `${cfg.appName}-smoke-updates`), ELECTRON_ENABLE_LOGGING: "1" };
+// 设置、日志也写到临时目录
+const env = {
+  ...process.env, ELECTRON_ENABLE_LOGGING: "1",
+  APP_UPDATES_DIR: path.join(require("os").tmpdir(), `${cfg.appName}-smoke-updates`),
+  APP_DATA_DIR: path.join(require("os").tmpdir(), `${cfg.appName}-smoke-data`),
+};
 const child = spawn(exe, args, { env, stdio: ["ignore", "pipe", "pipe"] });
 let out = "";
 child.stdout.on("data", (d) => { out += d; process.stdout.write(d); });

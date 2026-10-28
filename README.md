@@ -15,6 +15,65 @@
 - **示例界面**：一个页面，显示应用名、版本和来源（安装包内置 / 已更新），以及「应用更新」卡片（检查更新 / 下载更新带进度条 / 重启生效），错误都用中文说明。
 - **CI 与发布**：GitHub Actions 三系统测试 + 真实启动冒烟测试；推 tag 自动出 dmg（Apple 芯片 + Intel）/ exe / AppImage 和增量包；也可以只发增量包。
 
+## 通用外壳（新项目只管往里填页面）
+
+打开就是一个完整的桌面应用框架：
+
+- **左侧导航**：拖动右边缘调宽度（180–360px），拖到最左或双击边缘 / 点底部箭头 / `Ctrl/⌘ + B` 折叠成图标栏；宽度和折叠状态会记住。
+- **深浅色**：跟随系统 / 浅色 / 深色，同时作用于原生菜单和滚动条（`nativeTheme`）。
+- **设置页**：外观（主题、界面缩放、侧边栏）、通用（开机自启、自动检查更新）、应用更新、数据与日志（打开数据目录、日志级别、清除缓存、恢复默认）、关于。设置存在 `<数据目录>/settings.json`，有默认值和校验。
+- **日志页**：主进程和页面的日志实时显示，可按级别 / 关键字筛选、暂停滚动、复制、打开日志文件夹；同时按天写文件、保留 7 天。有新错误时导航上会出现角标。
+- **后台任务**：主进程注册任务，页面一行启动；进度条（未知进度显示滚动条）、可取消、排队（默认同时 2 个）；侧边栏底部常驻进度指示，完成/失败弹提示。
+
+### 加一个页面
+
+1. 复制 `renderer/pages/home.js` 为 `renderer/pages/notes.js`，改 `id` / `title` / `icon`；
+2. 在 `renderer/index.html` 的「你的页面」那段加一行 `<script src="pages/notes.js"></script>`。
+
+```js
+Shell.registerPage({
+  id: "notes", title: "笔记", icon: "note", order: 20,   // icon：home note folder search chart user star…，或一个字
+  render(root, ctx) { root.append(Shell.h("h1", {}, "笔记")); },  // 第一次打开时调用
+  onShow(root, ctx) {},                                  // 每次切进来（可选）
+});
+```
+
+页面可用的工具：`Shell.h(tag, attrs, ...children)` 建元素、`Shell.toast(msg, "success")`、`await Shell.confirm("确定？")`、`Shell.navigate(id)`、`Shell.setBadge(id, n)`、`Shell.getSettings()` / `Shell.saveSettings({...})`、`Shell.tasks.run(type, params)`；和主进程通信走 `window.app`（见 `preload.js`）。
+
+### 加一个后台任务
+
+在 `main.js` 里注册（示例任务 `demo` 就在那里）：
+
+```js
+tasks.register("export", {
+  title: "导出数据",
+  single: true,                       // 同类任务只允许一个（可选）
+  async handler(params, ctx) {
+    for (let i = 0; i < n; i++) {
+      ctx.throwIfCancelled();         // 取消时抛出；也可以把 ctx.signal 传给 fetch
+      ctx.progress((i + 1) / n * 100, `第 ${i + 1}/${n} 项`);   // 传 null 表示进度未知
+    }
+    return { file };                  // 结果放在 task.result
+  },
+});
+```
+
+页面里：`await Shell.tasks.run("export", { ... })`。任务开始/结束/失败会自动写日志。
+
+### 加设置项 / 设置分组
+
+1. `main.js` 里扩展 schema：`schema: { ...BASE_SCHEMA, exportDir: { type: "string", default: "" } }`（类型：`bool` / `number`（min/max/step）/ `enum`（values）/ `string`）；
+2. 页面里加一个分组：
+
+```js
+Shell.registerSettingsSection({ id: "export", title: "导出", order: 25, render(box) {
+  const { row, toggle, select, segmented } = Shell.settingsUI;
+  box.append(row("导出目录", Shell.getSettings().exportDir || "未设置", Shell.h("button", { class: "btn" }, "选择…")));
+} });
+```
+
+主进程写日志：`const log = logger.scope("模块名"); log.info("…")`。
+
 ## 5 分钟上手
 
 1. **改配置** `app.config.json`：
@@ -37,7 +96,7 @@
 
 3. **运行**：`npm start`
 
-在 `renderer/` 里写你的界面，在 `main.js` 里加主进程逻辑，通过 `preload.js` 暴露接口。应用图标：放一张 512×512 的 `build/icon.png` 即可（三个系统通用）。
+在 `renderer/pages/` 里写你的页面（见上面「加一个页面」），在 `main.js` 里加主进程逻辑和后台任务，通过 `preload.js` 暴露接口。应用图标：放一张 512×512 的 `build/icon.png` 即可（三个系统通用）。
 
 ### 常用命令
 
@@ -132,15 +191,22 @@ git switch main && git push
 | `--app-gpu` | macOS 上恢复显卡加速。默认关闭，因为部分 Mac 上 Chromium 的 ANGLE Metal 后端编译着色器失败（`Function main0 was not found`），窗口会一直黑屏 |
 | `--smoke-test` | 冒烟测试：隐藏窗口加载页面，检查 preload 接口和页面内容后退出，输出 `SMOKE OK …`，退出码 0 = 通过 |
 
-环境变量 `APP_UPDATES_DIR` 可以指定其他更新目录（测试用）。
+环境变量 `APP_UPDATES_DIR` 可以指定其他更新目录，`APP_DATA_DIR` 可以指定设置和日志的目录（测试用）。
 
 ## 目录结构
 
 ```
 app.config.json          唯一配置
 boot/bootstrap.js        启动器（package.json 的 main）
-main.js / preload.js     主进程 / 预加载
-renderer/                界面（index.html、app.js、style.css）
+main.js / preload.js     主进程 / 预加载（在 main.js 里注册后台任务、扩展设置项）
+renderer/index.html      外壳布局 + 脚本清单
+renderer/pages/          你的页面（home.js 是示例）
+renderer/shell/          外壳：shell.js（导航、侧边栏、主题、提示条）、pages/（任务、日志、设置）
+renderer/style.css       样式（浅色 / 深色变量）
+lib/settings.js          设置存储（默认值 + 校验）
+lib/logger.js            日志（内存 + 按天写文件）
+lib/tasks.js             后台任务（进度、取消、排队）
+lib/shell-ipc.js         外壳的 IPC 和设置副作用
 lib/config.js            读配置、算发布地址
 lib/update-core.js       更新纯逻辑：选层、校验、回滚记录、错误翻译
 lib/updater.js           检查 / 下载更新

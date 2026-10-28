@@ -8,35 +8,38 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="page">
-    <header class="hero">
-      <h1 id="app-name">&nbsp;</h1>
-      <p class="meta">
-        <span id="app-version">&nbsp;</span>
-        <span id="app-source" class="tag" hidden></span>
-      </p>
-    </header>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="brand-mark" id="brand-mark">A</div>
+        <div class="brand-text">
+          <div class="brand-name" id="app-name">&nbsp;</div>
+          <div class="brand-ver"><span id="app-version">&nbsp;</span><span id="app-source" class="tag" hidden></span></div>
+        </div>
+      </div>
+      <nav id="nav" aria-label="主导航"></nav>
+      <div class="side-foot">
+        <button id="task-indicator" class="task-indicator" hidden title="后台任务">
+          <span class="ti-label" id="task-indicator-label"></span>
+          <span class="ti-track"><span class="ti-bar" id="task-indicator-bar"></span></span>
+        </button>
+        <button id="btn-collapse" class="collapse-btn" title="折叠侧边栏（Ctrl/⌘ + B）" aria-label="折叠侧边栏"></button>
+      </div>
+    </aside>
+    <div id="resizer" title="拖动调整宽度，双击折叠/展开" role="separator" aria-orientation="vertical"></div>
+    <main id="main"></main>
+  </div>
+  <div id="toasts" aria-live="polite"></div>
 
-    <!-- 在这里放你的业务界面 -->
-
-    <section class="card" id="update-card">
-      <div class="card-head">
-        <h2>应用更新</h2>
-      </div>
-      <p class="status" id="update-status">点击「检查更新」看看有没有新版本</p>
-      <p class="notes" id="update-notes" hidden></p>
-      <div class="progress" id="update-progress" hidden>
-        <div class="bar" id="update-bar"></div>
-      </div>
-      <p class="error" id="update-error" hidden></p>
-      <div class="actions">
-        <button id="btn-check" class="btn">检查更新</button>
-        <button id="btn-download" class="btn primary" hidden>下载更新</button>
-        <button id="btn-full" class="btn primary" hidden>下载完整安装包</button>
-        <button id="btn-restart" class="btn primary" hidden>重启生效</button>
-      </div>
-    </section>
-  </main>
-  <script src="app.js"></script>
+  <!-- 外壳核心：先加载 -->
+  <script src="shell/shell.js"></script>
+  <!-- 你的页面：在 pages/ 里新建文件，在这里加一行 script 即可出现在导航里 -->
+  <script src="pages/home.js"></script>
+  <!-- 内置页面（任务 / 日志 / 设置） -->
+  <script src="shell/pages/tasks.js"></script>
+  <script src="shell/pages/logs.js"></script>
+  <script src="shell/pages/settings.js"></script>
+  <!-- 最后启动 -->
+  <script src="shell/boot.js"></script>
 </body>
 </html>
