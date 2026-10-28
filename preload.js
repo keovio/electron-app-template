@@ -20,4 +20,38 @@ contextBridge.exposeInMainWorld("app", {
     onProgress: on("update:progress"),
     onStatus: on("update:status"),
   },
+  // 设置：get() 全部 / set({ key: value }) / reset([keys])；onChange(({ changed, settings }) => …)
+  settings: {
+    get: () => ipcRenderer.invoke("settings:get"),
+    set: (patch) => ipcRenderer.invoke("settings:set", patch),
+    reset: (keys) => ipcRenderer.invoke("settings:reset", keys),
+    schema: () => ipcRenderer.invoke("settings:schema"),
+    onChange: on("settings:changed"),
+  },
+  // 日志：list({ level, q, limit }) / write(level, message, scope) / onEntries(batch => …)
+  logs: {
+    list: (filter) => ipcRenderer.invoke("logs:list", filter),
+    clear: () => ipcRenderer.invoke("logs:clear"),
+    write: (level, message, scope) => ipcRenderer.invoke("logs:write", level, message, scope),
+    openDir: () => ipcRenderer.invoke("logs:openDir"),
+    file: () => ipcRenderer.invoke("logs:file"),
+    onEntries: on("logs:entries"),
+  },
+  // 后台任务（在 main.js 里 tasks.register 注册）：run(type, params) → { ok, task }；onChange(task => …)
+  tasks: {
+    list: () => ipcRenderer.invoke("tasks:list"),
+    types: () => ipcRenderer.invoke("tasks:types"),
+    run: (type, params, opts) => ipcRenderer.invoke("tasks:run", type, params, opts),
+    cancel: (id) => ipcRenderer.invoke("tasks:cancel", id),
+    clearFinished: () => ipcRenderer.invoke("tasks:clearFinished"),
+    onChange: on("tasks:changed"),
+  },
+  system: {
+    info: () => ipcRenderer.invoke("system:info"),
+    openDataDir: () => ipcRenderer.invoke("system:openDataDir"),
+    openPath: (rel) => ipcRenderer.invoke("system:openPath", rel),
+    clearCache: () => ipcRenderer.invoke("system:clearCache"),
+    relaunch: () => ipcRenderer.invoke("system:relaunch"),
+    onThemeUpdated: on("theme:updated"),
+  },
 });
