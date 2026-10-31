@@ -1,0 +1,19 @@
+{
+  "version": "0.3.4",
+  "electron": "44.10.0",
+  "bootstrap": 1,
+  "sha256": "79e7367ef86f2e3ea53363ee8f7c50d7e98093d76c141cfb36568b6f23575b67",
+  "size": 187779,
+  "asarUrl": "https://github.com/keovio/electron-app-template/releases/download/v0.3.4/app-update.asar",
+  "installers": {
+    "mac": {
+      "arm64": "https://github.com/keovio/electron-app-template/releases/download/v0.3.2/my-electron-app-0.3.2-mac-arm64.dmg",
+      "x64": "https://github.com/keovio/electron-app-template/releases/download/v0.3.2/my-electron-app-0.3.2-mac-x64.dmg"
+    },
+    "win": "https://github.com/keovio/electron-app-template/releases/download/v0.3.2/my-electron-app-0.3.2-win-x64.exe",
+    "linux": "https://github.com/keovio/electron-app-template/releases/download/v0.3.2/my-electron-app-0.3.2-linux-x64.AppImage"
+  },
+  "releaseUrl": "https://github.com/keovio/electron-app-template/releases/tag/v0.3.4",
+  "notes": "运行日志面板升级：顶部显示进行中的任务和进度，可切「重点 / 全部 / 警告 / 错误」，模块彩色标签，警告错误整行标色，任务开始自动展开",
+  "publishedAt": "2026-10-31T11:36:49.712Z"
+}
