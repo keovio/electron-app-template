@@ -1,0 +1,19 @@
+{
+  "version": "0.3.3",
+  "electron": "44.10.0",
+  "bootstrap": 1,
+  "sha256": "db63b921cff7b59a30bd4b28325149377904c8b51c189fbece887a89f6cd8b31",
+  "size": 177306,
+  "asarUrl": "https://github.com/keovio/electron-app-template/releases/download/v0.3.3/app-update.asar",
+  "installers": {
+    "mac": {
+      "arm64": "https://github.com/keovio/electron-app-template/releases/download/v0.3.2/my-electron-app-0.3.2-mac-arm64.dmg",
+      "x64": "https://github.com/keovio/electron-app-template/releases/download/v0.3.2/my-electron-app-0.3.2-mac-x64.dmg"
+    },
+    "win": "https://github.com/keovio/electron-app-template/releases/download/v0.3.2/my-electron-app-0.3.2-win-x64.exe",
+    "linux": "https://github.com/keovio/electron-app-template/releases/download/v0.3.2/my-electron-app-0.3.2-linux-x64.AppImage"
+  },
+  "releaseUrl": "https://github.com/keovio/electron-app-template/releases/tag/v0.3.3",
+  "notes": "设置改成左侧分类导航、右侧单页内容，不用再从头滚到尾",
+  "publishedAt": "2026-10-31T07:57:20.951Z"
+}
