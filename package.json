@@ -1,6 +1,6 @@
 {
   "name": "electron-app-template",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "跨平台 Electron 应用模板：内置增量更新（应用层热更新 + 坏版本自动回滚）",
   "main": "boot/bootstrap.js",
   "private": true,

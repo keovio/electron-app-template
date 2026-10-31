@@ -86,6 +86,8 @@ Shell.registerSettingsSection({ id: "export", title: "导出", icon: "folder", o
 
 别的页面要跳到某一类：`Shell.openSettings("export")`。
 
+运行日志面板：模块名显示成中文彩色标签 `Shell.registerLogScopes({ export: ["导出", "green"] })`；「重点」视图默认隐藏调试、任务开始和界面类日志，可用 `Shell.setLogFocus((e, defaultRule) => …)` 自定义。
+
 主进程写日志：`const log = logger.scope("模块名"); log.info("…")`。
 
 ## 5 分钟上手

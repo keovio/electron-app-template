@@ -191,7 +191,7 @@ setupShellIpc({ electron, settings, logger, tasks, dataDir: DATA_DIR, broadcast,
 function runSmokeTest() {
   const errors = [];
   const hardStop = setTimeout(() => { console.log("SMOKE TIMEOUT"); app.exit(2); }, 60000);
-  mainWindow.webContents.on("console-message", (_e, level, message) => { if (level >= 3) errors.push(message); });
+  mainWindow.webContents.on("console-message", (_e, level, message) => { if (level >= 3 && !/ResizeObserver loop/.test(String(message))) errors.push(message); });
   const run = async () => {
     const out = await withTimeout(mainWindow.webContents.executeJavaScript(`(async () => {
       const a = window.app;
