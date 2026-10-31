@@ -59,6 +59,7 @@
     minus: '<path d="M5 12h14"/>',
     copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+    type: '<path d="M4 7V5h16v2M9 19h6M12 5v14"/>',
     arrowDown: '<path d="M12 5v14M6 13l6 6 6-6"/>',
     palette: '<path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-7.8-9-7.8z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/>',
   };

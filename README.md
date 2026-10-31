@@ -26,7 +26,7 @@
 - **可换字体**：系统默认 / 现代无衬线 / 宋体 / 圆体 / 等宽，或填任意已安装字体；字号 12–18px 单独可调。
 - **模块化卡片布局**：页面用 `Shell.modules()` + `Shell.card()` 拼，宽窗口自动排成多列（瀑布流），列数随窗口宽度实时变化、卡片少时自动变宽铺满；设置里可切到「经典」单列布局，页面代码不用改。设置页就是这样拼的。
 - **右侧运行日志面板**：`Ctrl/⌘ + L` 或侧边栏底部按钮开关，拖左边缘调宽度（双击收起），`A− / A+` 或 `Ctrl/⌘ + 滚轮` 缩放字号；收起时有新错误按钮会亮红点。
-- **设置页**：外观（布局、主题、主题色、缩放）、背景、字体、关于与更新（版本、检查更新、自动更新、开机自启、系统信息）、日志与数据（日志级别、日志面板字号、日志文件、数据目录、清除缓存、恢复默认）。设置存在 `<数据目录>/settings.json`，有默认值和校验，修改立即生效。
+- **设置页**：左侧分类导航（业务设置 / 通用设置），右侧一次只显示一类，记住上次打开的分类。内置分类：外观（布局、主题、主题色、缩放）、背景、字体、关于与更新（版本、检查更新、自动更新、开机自启、系统信息）、日志与数据（日志级别、日志面板字号、日志文件、数据目录、清除缓存、恢复默认）。设置存在 `<数据目录>/settings.json`，有默认值和校验，修改立即生效。
 - **日志页**：主进程和页面的日志实时显示，可按级别 / 关键字筛选、暂停滚动、复制、打开日志文件夹；同时按天写文件、保留 7 天。有新错误时导航上会出现角标。
 - **后台任务**：主进程注册任务，页面一行启动；进度条（未知进度显示滚动条）、可取消、排队（默认同时 2 个）；侧边栏底部常驻进度指示，完成/失败弹提示。
 
@@ -75,14 +75,16 @@ tasks.register("export", {
 ### 加设置项 / 设置分组
 
 1. `main.js` 里扩展 schema：`schema: { ...BASE_SCHEMA, exportDir: { type: "string", default: "" } }`（类型：`bool` / `number`（min/max/step）/ `enum`（values）/ `string`）；
-2. 页面里加一个分组：
+2. 页面里加一个分类（左侧导航多一项；不填 `group` 归「业务设置」，`group: "system"` 归「通用设置」；按 `order` 排序）：
 
 ```js
-Shell.registerSettingsSection({ id: "export", title: "导出", order: 25, render(box) {
-  const { row, toggle, select, segmented, range, swatches } = Shell.settingsUI;   // 每个分组是一张卡片
+Shell.registerSettingsSection({ id: "export", title: "导出", icon: "folder", order: 25, render(box) {
+  const { row, toggle, select, segmented, range, swatches } = Shell.settingsUI;   // 右侧显示这一类的内容
   box.append(row("导出目录", Shell.getSettings().exportDir || "未设置", Shell.h("button", { class: "btn" }, "选择…")));
 } });
 ```
+
+别的页面要跳到某一类：`Shell.openSettings("export")`。
 
 主进程写日志：`const log = logger.scope("模块名"); log.info("…")`。
 

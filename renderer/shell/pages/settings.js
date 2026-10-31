@@ -1,8 +1,9 @@
 "use strict";
-// 内置页面：设置。每个分组是一张模块卡片，宽窗口自动排成多列（瀑布流）。
+// 内置页面：设置。左侧分类导航（业务设置 / 通用设置），右侧一次只显示一类。
 // 外观（布局、深浅色、主题色、缩放）、背景（预设 / 自定义图片、遮罩、毛玻璃、性能模式）、字体、关于与更新（含系统信息）、日志与数据。
-// 加自己的设置分组（一张卡片）：
-//   Shell.registerSettingsSection({ id: "sync", title: "同步", order: 15, tag: "可选", render(box, ctx) { box.append(row(...)) } });
+// 加自己的设置分类（左侧导航多一项，默认归「业务设置」；group: "system" 归「通用设置」）：
+//   Shell.registerSettingsSection({ id: "sync", title: "同步", icon: "folder", order: 15, tag: "可选", render(box, ctx) { box.append(row(...)) } });
+// 从别的页面跳过来：Shell.openSettings("sync")
 // 设置项要先在 main.js 的 schema 里声明，读写用 Shell.getSettings() / Shell.saveSettings({ key: value })。
 (function () {
   const { h, icon } = window.Shell;
@@ -209,7 +210,7 @@
         row("毛玻璃", "卡片和侧边栏半透明模糊，透出背景", toggle("glass")),
         row("性能模式", "关闭毛玻璃模糊、阴影和动画，界面更流畅、更省电。老电脑或开很多窗口时推荐", toggle("performanceMode")));
     } },
-    { id: "font", title: "字体", order: 14, render(box) {
+    { id: "font", title: "字体", icon: "type", order: 14, render(box) {
       const custom = h("input", { class: "input", list: "font-suggest", placeholder: "输入字体名，如 LXGW WenKai", value: window.Shell.getSettings().fontCustom || "",
         oninput: window.Shell.debounce(() => window.Shell.saveSettings({ fontCustom: custom.value }), 300) });
       const datalist = h("datalist", { id: "font-suggest" }, ...COMMON_FONTS.map((f) => h("option", { value: f })));
@@ -264,26 +265,56 @@
     } },
   ];
 
+  // 跳到设置的某一类：Shell.openSettings("update")
+  let pending = "", showFn = null;
+  window.Shell.openSettings = (id) => {
+    if (showFn) showFn(id); else pending = id;
+    window.Shell.navigate("settings");
+  };
+
   window.Shell.registerPage({
     id: "settings", title: "设置", icon: "settings", section: "system", order: 30,
     async render(root, ctx) {
       root.classList.add("page-wide");
       root.append(h("header", { class: "page-head" }, h("div", {}, h("h1", {}, "设置"), h("p", { class: "sub" }, "修改立即生效并自动保存"))));
-      const body = window.Shell.modules();
-      body.classList.add("settings");
-      root.append(body);
+      // 左侧分类导航，右侧一次只显示一类。分组：自己注册的（group 不填）归「业务设置」，内置的归「通用设置」
+      const groups = {
+        custom: { title: "业务设置", items: [] },
+        system: { title: "通用设置", items: [] },
+      };
+      const nav = h("nav", { class: "set-nav", "aria-label": "设置分类" });
+      const content = h("div", { class: "set-content settings" });
+      root.append(h("div", { class: "set-layout" }, nav, content));
       const c = { ...ctx, system: await api.system.info() };
-      for (const sec of [...builtin, ...sections].sort((a, b) => (a.order ?? 50) - (b.order ?? 50))) {
+      const all = [];
+      for (const sec of [...builtin.map((b) => ({ group: "system", ...b })), ...sections].sort((a, b) => (a.order ?? 50) - (b.order ?? 50))) {
         const box = h("div", { class: "set-group-body" });
         const tagEl = h("span", { class: "card-tag" });
         const drawTag = () => { const t = typeof sec.tag === "function" ? sec.tag(window.Shell.getSettings()) : sec.tag; tagEl.textContent = t || ""; tagEl.hidden = !t; };
         drawTag();
         if (typeof sec.tag === "function") window.Shell.onSettings(drawTag);
-        body.append(h("section", { class: "card module set-group", id: `settings-${sec.id}` },
-          h("header", { class: "card-head" }, h("h2", {}, sec.icon ? icon(sec.icon) : null, sec.title), tagEl), box));
+        const card = h("section", { class: "card set-group", id: `settings-${sec.id}`, hidden: true },
+          h("header", { class: "card-head" }, h("h2", {}, sec.icon ? icon(sec.icon) : null, sec.title), tagEl), box);
+        content.append(card);
         try { await sec.render(box, c); } catch (err) { window.Shell.reportError(err); box.append(h("p", { class: "error" }, err.message)); }
-        if (!box.childElementCount) document.getElementById(`settings-${sec.id}`)?.remove();
+        if (!box.childElementCount) { card.remove(); continue; }
+        const btn = h("button", { class: "set-nav-item", dataset: { sec: sec.id }, onclick: () => show(sec.id) },
+          sec.icon ? icon(sec.icon) : h("span", { class: "set-nav-dot" }), h("span", {}, sec.title));
+        (groups[sec.group] || groups.custom).items.push(btn);
+        all.push(sec.id);
       }
+      for (const g of Object.values(groups)) if (g.items.length) nav.append(h("div", { class: "set-nav-group" }, g.title), ...g.items);
+      function show(id) {
+        if (!all.includes(id)) id = all[0];
+        for (const el of content.children) el.hidden = el.id !== `settings-${id}`;
+        for (const b of nav.querySelectorAll(".set-nav-item")) { const on = b.dataset.sec === id; b.classList.toggle("active", on); b.setAttribute("aria-current", on ? "page" : "false"); }
+        try { localStorage.setItem("settings.section", id); } catch { /* ignore */ }
+        root.scrollTop = 0;
+      }
+      let last = ""; try { last = localStorage.getItem("settings.section") || ""; } catch { /* ignore */ }
+      show(pending || last || all[0]);
+      pending = "";
+      showFn = show;
     },
   });
 })();
